@@ -1,0 +1,5 @@
+Shanghai GP3 135; Microphen; 100, 1+3, 11; 200, 1+1, 14
+Shanghai GP3 135; D-76; 100, 1+1, 8
+Silberra PAN 400; Microphen; 400, 1+3, 14
+Ilford HP5 Plus; D-76; 400, Stock, 7; 800, Stock, 10.5
+Fomapan 400; Microphen; 400, Stock, 6
