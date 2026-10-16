@@ -24,7 +24,7 @@ set SERVER_BACKUP_PATH=%SERVER_BACKUP_ROOT%/%BACKUP_DIR%
 echo.
 echo [1/7] Автоматическое обновление номера версии в коде Flutter...
 rem Генерируем красивую строку версии на основе штампа времени
-set NEW_VERSION=v1.2.0 (Build: %BACKUP_DIR%)
+set NEW_VERSION="v1.2.0 (Build: %BACKUP_DIR%)"
 powershell -NoProfile -Command "(Get-Content lib\screens\configuration_screen.dart) -replace 'const String appVersion = .*;', 'const String appVersion = ''%NEW_VERSION%'';' | Set-Content lib\screens\configuration_screen.dart"
 
 echo.
