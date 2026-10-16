@@ -31,16 +31,93 @@
 
   <title>filmnya</title>
   <link rel="manifest" href="manifest.json">
+<script>
+  // Хранилища для дескрипторов блокировки экрана
+  var nativeWakeLock = null;
+  var videoWakeLock = null;
+
+  // 1. Функция ВКЛЮЧЕНИЯ удержания экрана
+  window.enableWakeLock = async function() {
+    // --- План А: Официальный Screen Wake Lock API (Идеально для Android / Chrome) ---
+    if ('wakeLock' in navigator) {
+      try {
+        nativeWakeLock = await navigator.wakeLock.request('screen');
+        console.log('Успешно: Запущен нативный Screen Wake Lock.');
+        return; // Если сработало, видео-метод для iOS запускать не нужно
+      } catch (err) {
+        console.log('Нативный Wake Lock не запустился, переходим к видео:', err);
+      }
+    }
+
+    // --- План Б: Метод генерации видео через Canvas (Железобетонно для iOS Safari) ---
+    if (!videoWakeLock) {
+      try {
+        // Создаем невидимый элемент Canvas для рисования кадров
+        var canvas = document.createElement('canvas');
+        canvas.width = 16;
+        canvas.height = 16;
+        var ctx = canvas.getContext('2d');
+        
+        // Создаем динамический видеопоток (Stream) из canvas
+        var stream = canvas.captureStream(10); // 10 кадров в секунду
+        
+        videoWakeLock = document.createElement('video');
+        videoWakeLock.srcObject = stream;
+        videoWakeLock.setAttribute('loop', '');
+        videoWakeLock.setAttribute('playsinline', '');
+        videoWakeLock.setAttribute('webkit-playsinline', '');
+        videoWakeLock.muted = true;
+
+        // Каждые 100мс слегка меняем цвет одного пикселя, чтобы симулировать активность видеопотока
+        setInterval(function() {
+          if (videoWakeLock && !videoWakeLock.paused) {
+            ctx.fillStyle = 'rgba(' + Math.floor(Math.random() * 255) + ',0,0,1)';
+            ctx.fillRect(0, 0, 1, 1);
+          }
+        }, 100);
+      } catch (e) {
+        console.log('Ошибка инициализации Canvas видео:', e);
+      }
+    }
+
+    if (videoWakeLock) {
+      videoWakeLock.play().catch(function(err) {
+        console.log('Браузер заблокировал старт видео-потока:', err);
+      });
+    }
+  };
+
+  // 2. Функция ВЫКЛЮЧЕНИЯ удержания экрана (возвращаем стандартные настройки сна)
+  window.disableWakeLock = async function() {
+    // Отпускаем нативный замок Android
+    if (nativeWakeLock !== null) {
+      try {
+        await nativeWakeLock.release();
+        nativeWakeLock = null;
+        console.log('Нативный Wake Lock успешно отключен.');
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    // Останавливаем видеопоток iOS
+    if (videoWakeLock) {
+      videoWakeLock.pause();
+      console.log('Видео Wake Lock остановлено.');
+    }
+  };
+
+  // Важно для Android: восстанавливать блокировку, если пользователь свернул браузер и вернулся обратно
+  document.addEventListener('visibilitychange', async () => {
+    if (nativeWakeLock !== null && document.visibilityState === 'visible') {
+      try {
+        nativeWakeLock = await navigator.wakeLock.request('screen');
+      } catch (e) {}
+    }
+  });
+</script>
+
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
-  <script src="flutter_bootstrap.js" async></script>
+<script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
